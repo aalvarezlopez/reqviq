@@ -32,7 +32,7 @@ uint8_t level_value = 0;
 
 #define N_OF_ROWS 2
 #define N_OF_LEVELS 4
-#define DEFAULT_FOOTER "Press: 'q' to exit; 'a' to add new requirement; 'pX' to chose project X"
+#define DEFAULT_FOOTER "Press: 'q' to exit; 'a' to add new requirement; 'p' to change project"
 
 void gui_actioninmain(char keychar);
 void gui_actioninedit(keychar);
@@ -197,6 +197,16 @@ void gui_refresh(void)
         }
         wrefresh(latestrequirements_window);
     }
+    {
+        for(uint8_t i = 0; i < g_n_projects; i++){
+            if( g_current_project == i ){
+                mvwprintw(projects_window, i + 2, 0, "->");
+            }else{
+                mvwprintw(projects_window, i + 2, 0, "  ");
+            }
+        }
+        wrefresh(projects_window);
+    }
 }
 
 uint8_t gui_getuseraction(void)
@@ -255,6 +265,17 @@ void gui_actioninmain(char keychar)
             databaseconnect_insertrequirement(title_value, description_value, level_value + 1, g_current_project + 1);
             strcpy(title_value, "");
             strcpy(description_value, "");
+            break;
+        case 'p':
+            g_current_project++;
+            if( g_current_project >= g_n_projects ){ g_current_project = 0;}
+            break;
+        case 'P':
+            if( g_current_project == 0 ){
+                g_current_project = g_n_projects - 1;
+            }else{
+                g_current_project--;
+            }
             break;
     }
 }
