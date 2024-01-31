@@ -13,6 +13,7 @@ uint8_t gui_printlayout(void);
 void gui_close(void);
 uint8_t gui_getuseraction(void);
 void gui_refresh(void);
+ void gui_printmessage(char *message);
 
 typedef enum guimainstate_e{
     INIT,

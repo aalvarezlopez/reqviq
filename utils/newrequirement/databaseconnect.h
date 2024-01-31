@@ -13,6 +13,10 @@
 uint8_t databaseconnect_start(void);
 uint8_t databaseconnect_getprojects(char title[][32],
                                 char description[][512], uint8_t maxn);
+uint8_t databaseconnect_getrequirements(char title[][128], char description[][512],
+    uint8_t layer[], uint8_t maxn);
+void databaseconnect_insertrequirement(char *title, char *description, uint8_t layer,
+    uint8_t project);
 void databaseconnect_close(void);
 
 #endif
