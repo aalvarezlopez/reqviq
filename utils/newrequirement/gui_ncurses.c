@@ -21,12 +21,24 @@ WINDOW * newrequirement_window;
 WINDOW * footer;
 
 guimainstate_et g_state = INIT;
+uint8_t g_current_project = 0;
+uint8_t g_n_projects = 0;
+uint8_t g_current_row = 0;
+
+char title_value[128];
+char description_value[512];
+uint8_t level_value = 0;
+
+#define N_OF_ROWS 2
+#define DEFAULT_FOOTER "Press: 'q' to exit; 'a' to add new requirement; 'pX' to chose project X"
 
 void gui_actioninmain(char keychar);
 void gui_actioninedit(keychar);
 
 uint8_t gui_printlayout(void)
 {
+    strcpy(title_value, "Insert title here");
+    strcpy(description_value, "Insert description here");
     if ( (mainwin = initscr()) == NULL ) {
         fprintf(stderr, "Error initialising ncurses.\n");
         exit(EXIT_FAILURE);
@@ -56,37 +68,73 @@ uint8_t gui_printlayout(void)
     mvwprintw(newrequirement_window, 2, 2, "Description:");
     mvwprintw(newrequirement_window, 3, 2, "Level:");
     wbkgd(projects_window, COLOR_PAIR(7));
-    mvwprintw(newrequirement_window, 1, 15, "Insert requirement title");
-    mvwprintw(newrequirement_window, 2, 15, "Insert requirement description");
+    mvwprintw(newrequirement_window, 1, 15, title_value);
+    mvwprintw(newrequirement_window, 2, 15, description_value);
     mvwprintw(newrequirement_window, 3, 15, "Project");
 
     footer = newwin(2, 200, 50, 0);
     wbkgd(footer, COLOR_PAIR(7));
-    mvwprintw(footer, 0, 2, "Press: 'q' to exit; 'a' to add new requirement; 'pX' to chose project X");
+    mvwprintw(footer, 0, 2, DEFAULT_FOOTER);
 
     wrefresh(projects_window);
     wrefresh(newrequirement_window);
     wrefresh(footer);
 }
 
+void gui_refresh_main(void)
+{
+    if( g_current_row == 0 ){
+        wattron(newrequirement_window, COLOR_PAIR(1));
+    }else{
+        wattron(newrequirement_window, COLOR_PAIR(2));
+    }
+    wmove(newrequirement_window, 1, 15);
+    wclrtoeol(newrequirement_window);
+    mvwprintw(newrequirement_window, 1, 15, title_value);
+
+    if( g_current_row == 1 ){
+        wattron(newrequirement_window, COLOR_PAIR(1));
+    }else{
+        wattron(newrequirement_window, COLOR_PAIR(2));
+    }
+    wmove(newrequirement_window, 2, 15);
+    wclrtoeol(newrequirement_window);
+    mvwprintw(newrequirement_window, 2, 15, description_value);
+
+    wclear(footer);
+    mvwprintw(footer, 0, 2, DEFAULT_FOOTER);
+    wrefresh(footer);
+}
+
+void gui_refresh_edit(void)
+{
+    wclear(footer);
+    mvwprintw(footer, 0, 2, "Press enter to insert the new value:");
+    if( g_current_row == 0){
+        mvwprintw(footer, 1, 2, title_value);
+    }else{
+        mvwprintw(footer, 1, 2, description_value);
+    }
+    wrefresh(footer);
+}
+
 void gui_refresh(void)
 {
-    char title[10][32];
-    char description[10][512];
-    uint8_t count = 0;
     if( g_state == INIT){
-        count = databaseconnect_getprojects(title, description, 10);
+        char title[10][32];
+        char description[10][512];
+        g_n_projects = databaseconnect_getprojects(title, description, 10);
         wattron(projects_window, COLOR_PAIR(1));
-        for(uint8_t i = 0; i < count; i++){
+        for(uint8_t i = 0; i < g_n_projects; i++){
             mvwprintw(projects_window, i + 2, 5, title[i]);
             mvwprintw(projects_window, i + 2, 30, description[i]);
         }
         g_state = MAIN;
         wrefresh(projects_window);
+    }else if(g_state == MAIN){
+        gui_refresh_main();
     }else{
-        mvwprintw(footer, 1, 2, g_state == MAIN ? "main" : "edit");
-        wrefresh(footer);
-
+        gui_refresh_edit();
     }
 }
 
@@ -120,19 +168,39 @@ void gui_actioninmain(char keychar)
         case 'i':
             g_state = EDIT;
             break;
+        case 'j':
+            g_current_row = g_current_row == 0 ? (N_OF_ROWS - 1) : (g_current_row-1);
+            break;
+        case 'k':
+            g_current_row++;
+            if( g_current_row >= N_OF_ROWS ){
+                g_current_row = 0;
+            }
+            break;
         case 'a':
+            strcpy(title_value, "");
+            strcpy(description_value, "");
             break;
     }
 }
 
 void gui_actioninedit(keychar)
 {
-    switch(keychar){
-        case KEY_ENTER:
-        case KEY_BACKSPACE:
-        case '\n':
-        case '\r':
-            g_state = MAIN;
-            break;
+    char *str;
+    if( g_current_row == 0){
+        str = title_value;
+    }else{
+        str = description_value;
+    }
+
+    if( keychar == '\n' || keychar == '\r' || keychar == KEY_ENTER ){
+        g_state = MAIN;
+    }else if( keychar == 127 ){
+        uint8_t len = strlen(str);
+        if( len > 0 ){ str[len-1] = 0; }
+    }else{
+        uint8_t len = strlen(str);
+        str[len] = keychar;
+        str[len+1] = 0;
     }
 }

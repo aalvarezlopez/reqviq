@@ -46,7 +46,7 @@ clean:
 	@rm -f $(TARGET)
 
 $(TARGET): $(OBJECTS)
-	$(CC) -o $@ $? -lncurses $(shell pkg-config --libs mysqlclient)
+	$(CC) -o $@ $^ -lncurses $(shell pkg-config --libs mysqlclient)
 
 %.o: %.c
 	$(CC) $(CFLAGS) $(shell pkg-config --cflags mysqlclient)  -g -c -o $@ $<
