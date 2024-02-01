@@ -221,7 +221,7 @@ uint8_t gui_getuseraction(void)
             gui_actioninedit(keychar);
             break;
     }
-    return keychar == 'q' ? 0 : 1;
+    return ((keychar == 'q') && (g_state != EDIT)) ? 0 : 1;
 }
 
 void gui_close(void)

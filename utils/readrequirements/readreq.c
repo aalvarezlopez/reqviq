@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <curses.h>
 #include "gui_ncurses.h"
+#include "requirements.h"
 #include "databaseconnect.h"
 
 

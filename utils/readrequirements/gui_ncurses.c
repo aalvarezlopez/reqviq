@@ -13,14 +13,11 @@
 #include "mysql.h"
 #include "gui_ncurses.h"
 
-#include "databaseconnect.h"
 #include "requirements.h"
+#include "databaseconnect.h"
 
 WINDOW * mainwin;
-WINDOW * projectrequirements;
-WINDOW * systemrequirements;
-WINDOW * softwarerequirements;
-WINDOW * hardwarerequirements;
+WINDOW * requirementswindow[4];
 WINDOW * projectselector;
 WINDOW * footer;
 
@@ -29,6 +26,10 @@ guimainstate_et g_state = INIT;
 uint8_t g_n_projects = 0;
 uint8_t selectedproject = 0;
 uint8_t selectedlayer = 0;
+uint8_t selectedrequirement[] = {0, 0, 0, 0};
+bool g_show_only_related = false;
+uint8_t g_n_requirements[] = {0, 0, 0, 0};
+uint16_t g_req_uid[10][REQ_TITLE_LEN];
 
 void print_projects(void);
 
@@ -53,34 +54,33 @@ uint8_t gui_printlayout(void)
     init_pair(7, COLOR_MAGENTA, COLOR_GREEN);
     init_pair(8, COLOR_WHITE, COLOR_YELLOW);
 
-    projectrequirements = newwin(maxX/3, maxY, 0, 0);
-    wbkgd(projectrequirements, COLOR_PAIR(1));
-    wattron(projectrequirements, COLOR_PAIR(8));
-    mvwprintw(projectrequirements, 0, 0, " + Project Requirements");
-    whline(projectrequirements, ' ', maxY);
-    wattron(projectrequirements, COLOR_PAIR(4));
+    requirementswindow[0] = newwin(maxX/3, maxY, 0, 0);
+    wbkgd(requirementswindow[0], COLOR_PAIR(1));
+    wattron(requirementswindow[0], COLOR_PAIR(8));
+    mvwprintw(requirementswindow[0], 0, 0, " + Project Requirements");
+    whline(requirementswindow[0], ' ', maxY);
+    wattron(requirementswindow[0], COLOR_PAIR(4));
 
-    systemrequirements = newwin(maxX/3, maxY, maxX/3 * 1, 0);
-    wbkgd(systemrequirements, COLOR_PAIR(1));
-    wattron(systemrequirements, COLOR_PAIR(8));
-    mvwprintw(systemrequirements, 0, 0, " - System Requirements");
-    whline(systemrequirements, ' ', maxY);
-    wattron(systemrequirements, COLOR_PAIR(4));
+    requirementswindow[1] = newwin(maxX/3, maxY, maxX/3 * 1, 0);
+    wbkgd(requirementswindow[1], COLOR_PAIR(1));
+    wattron(requirementswindow[1], COLOR_PAIR(8));
+    mvwprintw(requirementswindow[1], 0, 0, " - System Requirements");
+    whline(requirementswindow[1], ' ', maxY);
+    wattron(requirementswindow[1], COLOR_PAIR(4));
 
-    softwarerequirements = newwin(maxX/3, maxY/2, maxX/3 * 2, 0);
-    wbkgd(softwarerequirements, COLOR_PAIR(1));
-    wattron(softwarerequirements, COLOR_PAIR(8));
-    mvwprintw(softwarerequirements, 0, 0, " - Software Requirements");
-    whline(softwarerequirements, ' ', maxY/2);
-    mvwvline(softwarerequirements, 0, maxY/2 - 1, 0, maxX/3);
-    wattron(softwarerequirements, COLOR_PAIR(4));
+    requirementswindow[2] = newwin(maxX/3, maxY/2, maxX/3 * 2, 0);
+    wbkgd(requirementswindow[2], COLOR_PAIR(1));
+    wattron(requirementswindow[2], COLOR_PAIR(8));
+    mvwprintw(requirementswindow[2], 0, 0, " - Software Requirements");
+    whline(requirementswindow[2], ' ', maxY/2);
+    wattron(requirementswindow[2], COLOR_PAIR(4));
 
-    hardwarerequirements = newwin(maxX/3, maxY/2, maxX/3 * 2, maxY/2);
-    wbkgd(hardwarerequirements, COLOR_PAIR(1));
-    wattron(hardwarerequirements, COLOR_PAIR(8));
-    mvwprintw(hardwarerequirements, 0, 0, " - Hardware Requirements");
-    whline(hardwarerequirements, ' ', maxY/2);
-    wattron(hardwarerequirements, COLOR_PAIR(4));
+    requirementswindow[3] = newwin(maxX/3, maxY/2, maxX/3 * 2, maxY/2);
+    wbkgd(requirementswindow[3], COLOR_PAIR(1));
+    wattron(requirementswindow[3], COLOR_PAIR(8));
+    mvwprintw(requirementswindow[3], 0, 0, " - Hardware Requirements");
+    whline(requirementswindow[3], ' ', maxY/2);
+    wattron(requirementswindow[3], COLOR_PAIR(4));
 
     footer = newwin(5, maxY, maxX, 0);
     wbkgd(footer, COLOR_PAIR(6));
@@ -91,20 +91,20 @@ uint8_t gui_printlayout(void)
 
     print_projects();
 
-    wrefresh(projectrequirements);
-    wrefresh(systemrequirements);
-    wrefresh(softwarerequirements);
-    wrefresh(hardwarerequirements);
+    wrefresh(requirementswindow[0]);
+    wrefresh(requirementswindow[1]);
+    wrefresh(requirementswindow[2]);
+    wrefresh(requirementswindow[3]);
     wrefresh(footer);
     wrefresh(projectselector);
 }
 
 void gui_close(void)
 {
-    delwin(projectrequirements);
-    delwin(systemrequirements);
-    delwin(softwarerequirements);
-    delwin(hardwarerequirements);
+    delwin(requirementswindow[0]);
+    delwin(requirementswindow[1]);
+    delwin(requirementswindow[2]);
+    delwin(requirementswindow[3]);
     delwin(footer);
     endwin();
 }
@@ -117,8 +117,8 @@ void gui_printmessage(char *message)
     wrefresh(popupmessage);
     wgetch(popupmessage);
     delwin(popupmessage);
-    touchwin(systemrequirements);
-    wrefresh(systemrequirements);
+    touchwin(requirementswindow[1]);
+    wrefresh(requirementswindow[1]);
 }
 
 void gui_regreshproject(void)
@@ -133,37 +133,65 @@ void gui_regreshproject(void)
     wrefresh(projectselector);
 }
 
+void gui_refreshselectedrequirement(void)
+{
+    for(uint8_t i = 0; i < N_REQ_IN_A_WINDOW; i++){
+        if( selectedlayer == 0 && selectedrequirement[selectedlayer] == i){
+            mvwprintw(requirementswindow[0], i + 2, 0, "-->");
+        }else{
+            mvwprintw(requirementswindow[0], i + 2, 0, "   ");
+        }
+        if( selectedlayer == 1 && selectedrequirement[selectedlayer] == i){
+            mvwprintw(requirementswindow[1], i + 2, 0, "-->");
+        }else{
+            mvwprintw(requirementswindow[1], i + 2, 0, "   ");
+        }
+        if( selectedlayer == 2 && selectedrequirement[selectedlayer] == i){
+            mvwprintw(requirementswindow[2], i + 2, 0, "-->");
+        }else{
+            mvwprintw(requirementswindow[2], i + 2, 0, "   ");
+        }
+        if( selectedlayer == 3 && selectedrequirement[selectedlayer] == i){
+            mvwprintw(requirementswindow[3], i + 2, 0, "-->");
+        }else{
+            mvwprintw(requirementswindow[3], i + 2, 0, "   ");
+        }
+    }
+}
+
 void gui_regreshmain(void)
 {
     char title[10][128];
     char description[10][512];
     uint16_t n_requirements;
-    n_requirements = requirement_getprojectall(title, description);
-    for(uint8_t i = 0; i < n_requirements; i++){
-        mvwprintw(projectrequirements, i + 2, 0, title[i]);
+    for(uint8_t layer = 0; layer < N_LAYERS; layer++){
+        uint8_t uid = 1;
+        if( g_show_only_related){
+            g_n_requirements[layer] = requirement_getrequirement(title, description, NULL, layer + 1, g_req_uid[selectedlayer][selectedrequirement[selectedlayer]]);
+            for(uint8_t i = 0; i < g_n_requirements[layer]; i++){
+                mvwprintw(requirementswindow[layer], i + 2, 3, title[i]);
+                wclrtoeol(requirementswindow[layer]);
+            }
+            for(uint8_t i = g_n_requirements[layer]; i < N_REQ_IN_A_WINDOW; i++){
+                mvwprintw(requirementswindow[layer], i + 2, 3, "*");
+                wclrtoeol(requirementswindow[layer]);
+            }
+        }else{
+            g_n_requirements[layer] = requirement_getallrequirements(title, description, g_req_uid[layer], layer + 1);
+            for(uint8_t i = 0; i < g_n_requirements[layer]; i++){
+                mvwprintw(requirementswindow[layer], i + 2, 3, title[i]);
+                wclrtoeol(requirementswindow[layer]);
+            }
+            for(uint8_t i = g_n_requirements[layer]; i < N_REQ_IN_A_WINDOW; i++){
+                mvwprintw(requirementswindow[layer], i + 2, 3, "*");
+                wclrtoeol(requirementswindow[layer]);
+            }
+        }
+        wattron(requirementswindow[layer], COLOR_PAIR(8));
+        mvwprintw(requirementswindow[layer],  0, 0, selectedlayer == layer ? " +" : " -");
+        wattron(requirementswindow[layer], COLOR_PAIR(4));
+        wrefresh(requirementswindow[layer]);
     }
-    n_requirements = requirement_getsystemall(title, description);
-    for(uint8_t i = 0; i < n_requirements; i++){
-        mvwprintw(systemrequirements, i + 2, 0, title[i]);
-    }
-    n_requirements = requirement_getsoftwareall(title, description);
-    for(uint8_t i = 0; i < n_requirements; i++){
-        mvwprintw(softwarerequirements, i + 2, 0, title[i]);
-    }
-    n_requirements = requirement_gethardwareall(title, description);
-    for(uint8_t i = 0; i < n_requirements; i++){
-        mvwprintw(hardwarerequirements, i + 2, 0, title[i]);
-    }
-    wattron(projectrequirements, COLOR_PAIR(8));
-    mvwprintw(projectrequirements,  0, 0, selectedlayer == 0 ? " +" : " -");
-    mvwprintw(systemrequirements,   0, 0, selectedlayer == 1 ? " +" : " -");
-    mvwprintw(softwarerequirements, 0, 0, selectedlayer == 2 ? " +" : " -");
-    mvwprintw(hardwarerequirements, 0, 0, selectedlayer == 3 ? " +" : " -");
-    wattron(projectrequirements, COLOR_PAIR(4));
-    wrefresh(projectrequirements);
-    wrefresh(systemrequirements);
-    wrefresh(hardwarerequirements);
-    wrefresh(softwarerequirements);
 }
 
 void gui_refresh(void)
@@ -191,10 +219,9 @@ void gui_getuseractioninit(char keychar)
     }else if(keychar == '\n' || keychar == '\r'){
         g_state = MAIN;
         delwin(projectselector);
-        touchwin(systemrequirements);
-        wrefresh(systemrequirements);
-        g_n_requirements = databaseconnect_getrequirements_project( g_title, g_description, g_layer,
-            selectedproject + 1, 1024);
+        touchwin(requirementswindow[1]);
+        wrefresh(requirementswindow[1]);
+        requirement_init(selectedproject);
     }
 }
 
@@ -211,8 +238,21 @@ void gui_getuseractionmain(char keychar)
         if( selectedlayer >= 4){
             selectedlayer = 0;
         }
+    }else if(keychar == 'l'){
+        if(selectedrequirement[selectedlayer] == 0){
+            selectedrequirement[selectedlayer] = (g_n_requirements[selectedlayer] - 1);
+        }else{
+            selectedrequirement[selectedlayer]--;
+        }
+    }else if(keychar == 'h'){
+        selectedrequirement[selectedlayer]++;
+        selectedrequirement[selectedlayer] %= g_n_requirements[selectedlayer];
     }else if(keychar == 'r'){
+        g_show_only_related = true;
+    }else if(keychar == 'R'){
+        g_show_only_related = false;
     }
+    gui_refreshselectedrequirement();
 }
 
 uint8_t gui_getuseraction(void)

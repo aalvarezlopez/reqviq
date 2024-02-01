@@ -6,13 +6,26 @@
  * @date 2024-01-31
  */
 
-extern char g_title[][128];
-extern char g_description[][512];
-extern uint8_t g_layer[];
-extern uint16_t g_n_requirements;
+#ifndef REQUIREMENTS_H
+#define REQUIREMENTS_H
 
+#include "requirements_cfg.h"
 
-uint8_t requirement_gethardwareall(char title[][128],char description[][512]);
-uint8_t requirement_getsoftwareall(char title[][128],char description[][512]);
-uint8_t requirement_getsystemall(char title[][128],char description[][512]);
-uint8_t requirement_getprojectall(char title[][128],char description[][512]);
+#include "requirements.h"
+
+typedef struct requirement_s{
+    char title[REQ_TITLE_LEN];
+    char description[REQ_DESC_LEN];
+    uint8_t layer;
+    uint8_t link[REQ_MAX_LINKS];
+    uint8_t uid;
+    uint8_t n_links;
+}requirement_st;
+
+uint8_t requirement_getallrequirements(char title[][REQ_TITLE_LEN], char description[][REQ_DESC_LEN], uint16_t uid[],
+    uint8_t layer);
+uint8_t requirement_getrequirement(char title[][REQ_TITLE_LEN], char description[][REQ_DESC_LEN], uint16_t *uid,
+    uint8_t layer, uint8_t link);
+void requirement_init(uint8_t);
+
+#endif

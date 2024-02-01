@@ -9,6 +9,9 @@
 #ifndef GUI_NCURSES_H
 #define GUI_NCURSES_H
 
+#define N_REQ_IN_A_WINDOW 10u
+#define N_LAYERS 4u
+
 uint8_t gui_printlayout(void);
 void gui_close(void);
 void gui_refresh(void);

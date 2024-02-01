@@ -5,8 +5,11 @@
  * @version 1.0.0
  * @date 2024-01-30
  */
+#include "stdio.h"
+#include "stdint.h"
 
 #include "mysql.h"
+#include "requirements.h"
 #include "databaseconnect.h"
 
 MYSQL* mysql;
@@ -49,7 +52,7 @@ uint8_t databaseconnect_getprojects(char title[][32], char description[][512], u
     return j;
 }
 
-uint16_t databaseconnect_getrequirements_project(char title[][128], char description[][512], uint8_t layer[], uint8_t project, uint16_t maxn)
+uint16_t databaseconnect_getrequirements_project(requirement_st *requirements, uint8_t project, uint16_t maxn)
 {
     MYSQL_ROW row;
     uint8_t j = 0;
@@ -69,9 +72,14 @@ uint16_t databaseconnect_getrequirements_project(char title[][128], char descrip
             unsigned long *lengths;
             lengths = mysql_fetch_lengths(mysql_result);
             if( num_fields >= 3){
-                strcpy(title[j], row[2]);
-                strcpy(description[j], row[3]);
-                layer[j] = atoi(row[5]);
+                strcpy(requirements[j].title, row[2]);
+                strcpy(requirements[j].description, row[3]);
+                requirements[j].layer = atoi(row[5]);
+                requirements[j].uid = atoi(row[0]);
+                if( row[1] != NULL){
+                    requirements[j].link[0] = atoi(row[1]);
+                }
+                requirements[j].n_links = 1;
             }
             j++;
             if( j > maxn){
