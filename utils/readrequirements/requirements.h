@@ -30,5 +30,9 @@ void requirement_init(uint8_t);
 requirement_st requirement_getdetailedinformation(uint16_t uid);
 void requirement_link(uint16_t link, uint16_t uid);
 void requirement_newrequirement( char title[], char description[], uint8_t layer);
+void requirement_increaseoffset(uint8_t layer);
+void requirement_decreaseoffset(uint8_t layer);
+uint16_t requirement_getn(uint8_t layer);
+uint16_t requirement_getoffset(uint8_t layer);
 
 #endif

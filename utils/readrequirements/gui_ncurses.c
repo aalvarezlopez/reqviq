@@ -144,6 +144,19 @@ void gui_regreshproject(void)
 
 void gui_refreshselectedrequirement(void)
 {
+    uint16_t n = requirement_getn(selectedlayer);
+    char text[64];
+    uint16_t offset = requirement_getoffset(selectedlayer);
+    if( n > MAX_REQUIREMENTS_REQUEST ){
+        sprintf(text, "^ %d/%d",offset + selectedrequirement[selectedlayer] + 1, n);
+        mvwprintw(requirementswindow[selectedlayer], 1, 0, text);
+        wclrtoeol(requirementswindow[selectedlayer]);
+        mvwprintw(requirementswindow[selectedlayer], N_REQ_IN_A_WINDOW + 2, 0, "v");
+    }else{
+        sprintf(text, "  %d/%d",offset + selectedrequirement[selectedlayer] + 1, n);
+        mvwprintw(requirementswindow[selectedlayer], 1, 0, text);
+        wclrtoeol(requirementswindow[selectedlayer]);
+    }
     for(uint8_t i = 0; i < N_REQ_IN_A_WINDOW; i++){
         if( selectedlayer == 0 && selectedrequirement[selectedlayer] == i){
             mvwprintw(requirementswindow[0], i + 2, 0, "-->");
@@ -179,6 +192,7 @@ void gui_refreshmain(void)
             g_n_requirements[layer] = requirement_getrequirement(title, description, NULL, layer + 1, g_req_uid[selectedlayer][selectedrequirement[selectedlayer]]);
             for(uint8_t i = 0; i < g_n_requirements[layer]; i++){
                 mvwprintw(requirementswindow[layer], i + 2, 3, title[i]);
+                mvwprintw(requirementswindow[layer], i + 2, 50, description[i]);
                 wclrtoeol(requirementswindow[layer]);
             }
             for(uint8_t i = g_n_requirements[layer]; i < N_REQ_IN_A_WINDOW; i++){
@@ -192,6 +206,7 @@ void gui_refreshmain(void)
                     wattron(requirementswindow[layer], COLOR_PAIR(8));
                 }
                 mvwprintw(requirementswindow[layer], i + 2, 3, title[i]);
+                mvwprintw(requirementswindow[layer], i + 2, 50, description[i]);
                 wclrtoeol(requirementswindow[layer]);
                 wattron(requirementswindow[layer], COLOR_PAIR(4));
             }
@@ -215,13 +230,17 @@ void gui_toolbar(void)
     wbkgd(footer, COLOR_PAIR(7));
     mvwprintw(footer,  0, 2, str);
     wclrtoeol(footer);
+    mvwprintw(footer,  1, 2, req.title);
+    wclrtoeol(footer);
+    mvwprintw(footer,  2, 2, req.description);
+    wclrtoeol(footer);
     if( highlighted.ishighlighted == true ){
         sprintf(str, "{MARKED} UID: %d", highlighted.uid);
         wbkgd(footer, COLOR_PAIR(7));
-        mvwprintw(footer,  1, 2, str);
+        mvwprintw(footer,  4, 2, str);
         wclrtoeol(footer);
     }else{
-        wmove(footer,  1, 0);
+        wmove(footer,  4, 0);
         wclrtoeol(footer);
     }
     wattron(footer, COLOR_PAIR(6));
@@ -275,13 +294,16 @@ void gui_getuseractionmain(char keychar)
         }
     }else if(keychar == 'l'){
         if(selectedrequirement[selectedlayer] == 0){
-            selectedrequirement[selectedlayer] = (g_n_requirements[selectedlayer] - 1);
+            requirement_decreaseoffset(selectedlayer);
         }else{
             selectedrequirement[selectedlayer]--;
         }
     }else if(keychar == 'h'){
         selectedrequirement[selectedlayer]++;
-        selectedrequirement[selectedlayer] %= g_n_requirements[selectedlayer];
+        if( selectedrequirement[selectedlayer] == g_n_requirements[selectedlayer] ){
+            requirement_increaseoffset(selectedlayer);
+            selectedrequirement[selectedlayer] = g_n_requirements[selectedlayer] - 1;
+        }
     }else if(keychar == 'r'){
         g_show_only_related = true;
     }else if(keychar == 'R'){

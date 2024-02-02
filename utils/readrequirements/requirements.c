@@ -16,12 +16,29 @@
 
 requirement_st requirements[MAX_N_REQ];
 static uint16_t g_n_total_requirements = 0;
+static uint16_t g_offset[] = {0, 0, 0, 0};
+static uint16_t g_n_req[] = {0, 0, 0, 0};
 uint8_t g_project = 0;
 
 void requirement_init(uint8_t project)
 {
     g_project = project + 1;
     g_n_total_requirements = databaseconnect_getrequirements_project( requirements, project + 1, 1024);
+    for(uint16_t i = 0; i < g_n_total_requirements; i++){
+        if( requirements[i].layer > 0 ){
+            g_n_req[requirements[i].layer - 1]++;
+        }
+    }
+}
+
+uint16_t requirement_getoffset(uint8_t layer)
+{
+    return g_offset[layer];
+}
+
+uint16_t requirement_getn(uint8_t layer)
+{
+    return g_n_req[layer];
 }
 
 uint8_t requirement_getrequirement(char title[][REQ_TITLE_LEN], char description[][REQ_DESC_LEN], uint16_t *uid,
@@ -38,7 +55,12 @@ uint8_t requirement_getrequirement(char title[][REQ_TITLE_LEN], char description
     }
 
     if( link == 0 ){
+        uint16_t offset = 0;
         for(uint16_t i = 0; i < g_n_total_requirements; i++){
+            if( offset < g_offset[layer - 1]){
+                offset++;
+                continue;
+            }
             if( requirements[i].layer == layer ){
                 REQ_COPY_REQUIREMENT( count, i);
             }
@@ -71,6 +93,19 @@ uint8_t requirement_getrequirement(char title[][REQ_TITLE_LEN], char description
         }
     }
     return count;
+}
+
+void requirement_increaseoffset(uint8_t layer)
+{
+    if( g_n_req[layer] > MAX_REQUIREMENTS_REQUEST){
+        g_offset[layer] = ( g_offset[layer] >= (g_n_req[layer] - MAX_REQUIREMENTS_REQUEST - 1) ) ?
+            g_n_req[layer] - MAX_REQUIREMENTS_REQUEST : g_offset[layer] + 1;
+    }
+}
+
+void requirement_decreaseoffset(uint8_t layer)
+{
+    g_offset[layer] = ( g_offset[layer] > 0 ) ? g_offset[layer] - 1 : 0;
 }
 
 uint8_t requirement_getallrequirements(char title[][REQ_TITLE_LEN], char description[][REQ_DESC_LEN], uint16_t uid[],
@@ -245,4 +280,5 @@ void requirement_newrequirement( char title[], char description[], uint8_t layer
     requirements[g_n_total_requirements].layer = layer;
     requirements[g_n_total_requirements].link[0] = 0;
     g_n_total_requirements++;
+    g_n_req[layer -1]++;
 }
