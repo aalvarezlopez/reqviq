@@ -27,5 +27,8 @@ uint8_t requirement_getallrequirements(char title[][REQ_TITLE_LEN], char descrip
 uint8_t requirement_getrequirement(char title[][REQ_TITLE_LEN], char description[][REQ_DESC_LEN], uint16_t *uid,
     uint8_t layer, uint8_t link);
 void requirement_init(uint8_t);
+requirement_st requirement_getdetailedinformation(uint16_t uid);
+void requirement_link(uint16_t link, uint16_t uid);
+void requirement_newrequirement( char title[], char description[], uint8_t layer);
 
 #endif

@@ -17,5 +17,7 @@ uint8_t databaseconnect_getrequirements(char title[][128], char description[][51
     uint8_t layer[], uint8_t maxn);
 uint16_t databaseconnect_getrequirements_project(requirement_st *requirements, uint8_t project, uint16_t maxn);
 void databaseconnect_close(void);
+void databaseconnect_link(uint16_t link, uint16_t uid);
+void dtabaseconnect_newrequirement( char title[], char description[], uint8_t layer, uint8_t project);
 
 #endif

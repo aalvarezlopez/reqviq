@@ -62,7 +62,6 @@ uint16_t databaseconnect_getrequirements_project(requirement_st *requirements, u
     sprintf(query, "SELECT * from requirement where project_ref=\"%d\" ORDER BY "\
         "modified DESC LIMIT %d", project, maxn);
     resultquery = mysql_query(mysql, query);
-    gui_printmessage(query);
     mysql_result = mysql_store_result(mysql);
     if (mysql_result)
     {
@@ -98,6 +97,24 @@ void databaseconnect_insertrequirement(char *title, char *description, uint8_t l
     int resultquery;
     sprintf(query, "INSERT INTO requirement (title, description, project_ref,"\
         " layer, version) values (\"%s\", \"%s\", %d, %d, 1)", title, description, project, layer);
+    resultquery = mysql_query(mysql, query);
+}
+
+void databaseconnect_link(uint16_t link, uint16_t uid)
+{
+    char query[512];
+    int resultquery;
+    sprintf(query, "UPDATE requirement set linkup=%d where req_uid=%d", link, uid);
+    gui_printmessage(query);
+    resultquery = mysql_query(mysql, query);
+}
+
+void databaseconnect_newrequirement( char title[], char description[], uint8_t layer, uint8_t project)
+{
+    char query[512];
+    int resultquery;
+    sprintf(query, "INSERT INTO requirement (title, description, project_ref,"\
+        " layer, version) values (\"%s\", \"%s\", %d, %d, 1)", title, description, project, layer);
     gui_printmessage(query);
     resultquery = mysql_query(mysql, query);
 }
@@ -107,3 +124,4 @@ void databaseconnect_close(void)
     mysql_close(mysql);
     mysql_library_end();
 }
+

@@ -16,9 +16,11 @@
 
 requirement_st requirements[MAX_N_REQ];
 static uint16_t g_n_total_requirements = 0;
+uint8_t g_project = 0;
 
 void requirement_init(uint8_t project)
 {
+    g_project = project + 1;
     g_n_total_requirements = databaseconnect_getrequirements_project( requirements, project + 1, 1024);
 }
 
@@ -211,4 +213,30 @@ uint8_t requirement_findbottomreqlinkedtosystem(char title[][REQ_TITLE_LEN],
         }
     }
     return count;
+}
+
+requirement_st requirement_getdetailedinformation(uint16_t uid)
+{
+    requirement_st result;
+    for(uint16_t i = 0; i < g_n_total_requirements; i++){
+        if( uid == requirements[i].uid ){
+            result = requirements[i];
+        }
+    }
+    return result;
+}
+
+void requirement_link(uint16_t link, uint16_t uid)
+{
+    databaseconnect_link(link, uid);
+    for(uint16_t i = 0; i < g_n_total_requirements; i++){
+        if( uid == requirements[i].uid ){
+            requirements[i].link[0] = link;
+        }
+    }
+}
+
+void requirement_newrequirement( char title[], char description[], uint8_t layer)
+{
+    databaseconnect_newrequirement(title, description, layer, g_project);
 }

@@ -29,7 +29,16 @@ uint8_t selectedlayer = 0;
 uint8_t selectedrequirement[] = {0, 0, 0, 0};
 bool g_show_only_related = false;
 uint8_t g_n_requirements[] = {0, 0, 0, 0};
-uint16_t g_req_uid[10][REQ_TITLE_LEN];
+uint16_t g_req_uid[4][MAX_REQUIREMENTS_REQUEST];
+
+typedef struct markedrow_s{
+    uint8_t layer;
+    uint8_t row;
+    uint8_t uid;
+    bool ishighlighted;
+}markedrow_st;
+
+markedrow_st highlighted = (markedrow_st){.ishighlighted = false};
 
 void print_projects(void);
 
@@ -86,7 +95,7 @@ uint8_t gui_printlayout(void)
     wbkgd(footer, COLOR_PAIR(6));
 
     projectselector = newwin( 10, 40, maxX/2 - 5, maxY/2 - 20);
-    wbkgd(footer, COLOR_PAIR(6));
+    wbkgd(projectselector, COLOR_PAIR(6));
     mvwprintw(projectselector, 1, 3, "Chose a project:");
 
     print_projects();
@@ -159,7 +168,7 @@ void gui_refreshselectedrequirement(void)
     }
 }
 
-void gui_regreshmain(void)
+void gui_refreshmain(void)
 {
     char title[10][128];
     char description[10][512];
@@ -179,8 +188,12 @@ void gui_regreshmain(void)
         }else{
             g_n_requirements[layer] = requirement_getallrequirements(title, description, g_req_uid[layer], layer + 1);
             for(uint8_t i = 0; i < g_n_requirements[layer]; i++){
+                if( (layer == highlighted.layer) && (i == highlighted.row) && (highlighted.ishighlighted == true)){
+                    wattron(requirementswindow[layer], COLOR_PAIR(8));
+                }
                 mvwprintw(requirementswindow[layer], i + 2, 3, title[i]);
                 wclrtoeol(requirementswindow[layer]);
+                wattron(requirementswindow[layer], COLOR_PAIR(4));
             }
             for(uint8_t i = g_n_requirements[layer]; i < N_REQ_IN_A_WINDOW; i++){
                 mvwprintw(requirementswindow[layer], i + 2, 3, "*");
@@ -194,12 +207,34 @@ void gui_regreshmain(void)
     }
 }
 
+void gui_toolbar(void)
+{
+    char str[64];
+    requirement_st req = requirement_getdetailedinformation(g_req_uid[selectedlayer][selectedrequirement[selectedlayer]]);
+    sprintf(str, "UID: %d Link to: %d", req.uid, req.link[0]);
+    wbkgd(footer, COLOR_PAIR(7));
+    mvwprintw(footer,  0, 2, str);
+    wclrtoeol(footer);
+    if( highlighted.ishighlighted == true ){
+        sprintf(str, "{MARKED} UID: %d", highlighted.uid);
+        wbkgd(footer, COLOR_PAIR(7));
+        mvwprintw(footer,  1, 2, str);
+        wclrtoeol(footer);
+    }else{
+        wmove(footer,  1, 0);
+        wclrtoeol(footer);
+    }
+    wattron(footer, COLOR_PAIR(6));
+    wrefresh(footer);
+}
+
 void gui_refresh(void)
 {
     if( g_state == INIT ){
         gui_regreshproject();
     }else{
-        gui_regreshmain();
+        gui_refreshmain();
+        gui_toolbar();
     }
 }
 
@@ -251,6 +286,14 @@ void gui_getuseractionmain(char keychar)
         g_show_only_related = true;
     }else if(keychar == 'R'){
         g_show_only_related = false;
+    }else if(keychar == 'n'){
+        gui_createnewrequirement();
+    }else if(keychar == ';'){
+        gui_linkrequirement();
+    }else if(keychar == 'm'){
+        gui_markrequirement();
+    }else if(keychar == 'M'){
+        highlighted.ishighlighted = false;
     }
     gui_refreshselectedrequirement();
 }
@@ -276,4 +319,119 @@ void print_projects(void)
         mvwprintw(projectselector, 2 + i, 3, title[i]);
     }
     mvwprintw(projectselector, 2 , 0, "-->");
+}
+
+void gui_createnewrequirement()
+{
+    char title[32] = "";
+    char description[512] = "";
+    uint8_t layer = 0;
+    WINDOW * popupmessage;
+    popupmessage = newwin(10, 100, 20, 50);
+    wbkgd(popupmessage, COLOR_PAIR(6));
+
+    mvwprintw(popupmessage, 0, 2, "Creating new requirement");
+    mvwprintw(popupmessage, 1, 3, "Insert layer");
+    mvwprintw(popupmessage, 2, 4, "[p] Project");
+    mvwprintw(popupmessage, 3, 4, "[y] sYstem");
+    mvwprintw(popupmessage, 4, 4, "[s] Software");
+    mvwprintw(popupmessage, 5, 4, "[h] Hardware");
+    wrefresh(popupmessage);
+    {
+        char keychar;
+        keychar = wgetch(popupmessage);
+        switch(keychar){
+            case 'p':
+                layer = 1;
+                break;
+            case 'y':
+                layer = 2;
+                break;
+            case 's':
+                layer = 3;
+                break;
+            case 'h':
+                layer = 4;
+                break;
+            default:
+                layer = 0;
+        }
+    }
+    if( layer!= 0){
+        wclear(popupmessage);
+        mvwprintw(popupmessage, 0, 2, "Creating new requirement");
+        mvwprintw(popupmessage, 1, 3, "Insert title");
+        wrefresh(popupmessage);
+        while( true ){
+            char keychar;
+            uint8_t l = strlen(title);
+            keychar = wgetch(popupmessage);
+            if( keychar == '\r' || keychar == '\n'){
+                break;
+            }
+            title[ l + 1 ] = 0;
+            title[ l ] = keychar;
+            mvwprintw(popupmessage, 4, 4, title);
+            wrefresh(popupmessage);
+        }
+        wclear(popupmessage);
+        mvwprintw(popupmessage, 0, 2, "Creating new requirement");
+        mvwprintw(popupmessage, 1, 3, "Insert description");
+        wrefresh(popupmessage);
+        while( true ){
+            char keychar;
+            uint8_t l = strlen(description);
+            keychar = wgetch(popupmessage);
+            if( keychar == '\r' || keychar == '\n'){
+                break;
+            }
+            description[ l + 1 ] = 0;
+            description[ l ] = keychar;
+            mvwprintw(popupmessage, 4, 4, description);
+            wrefresh(popupmessage);
+        }
+        requirement_newrequirement( title, description, layer);
+    }
+    delwin(popupmessage);
+    touchwin(requirementswindow[1]);
+    wrefresh(requirementswindow[1]);
+}
+
+void gui_linkrequirement()
+{
+    if( highlighted.ishighlighted == true ){
+        highlighted.ishighlighted = false;
+        requirement_link(highlighted.uid, g_req_uid[selectedlayer][selectedrequirement[selectedlayer]]);
+    }else{
+        char refn[12] = "";
+        WINDOW * popupmessage;
+        popupmessage = newwin(10, 100, 20, 50);
+        wbkgd(popupmessage, COLOR_PAIR(6));
+        mvwprintw(popupmessage, 0, 2, "Insert requirement uid");
+        wrefresh(popupmessage);
+        while( true ){
+            char keychar;
+            uint8_t l = strlen(refn);
+            keychar = wgetch(popupmessage);
+            if( keychar == '\r' || keychar == '\n'){
+                break;
+            }
+            refn[ l + 1 ] = 0;
+            refn[ l ] = keychar;
+            mvwprintw(popupmessage, 1, 4, refn);
+            wrefresh(popupmessage);
+        }
+        delwin(popupmessage);
+        touchwin(requirementswindow[1]);
+        wrefresh(requirementswindow[1]);
+        requirement_link(atoi(refn), g_req_uid[selectedlayer][selectedrequirement[selectedlayer]]);
+    }
+}
+
+void gui_markrequirement()
+{
+    highlighted.layer = selectedlayer;
+    highlighted.row = selectedrequirement[selectedlayer];
+    highlighted.uid = g_req_uid[selectedlayer][selectedrequirement[selectedlayer]];
+    highlighted.ishighlighted = true;
 }
