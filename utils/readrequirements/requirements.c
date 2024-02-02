@@ -238,5 +238,11 @@ void requirement_link(uint16_t link, uint16_t uid)
 
 void requirement_newrequirement( char title[], char description[], uint8_t layer)
 {
-    databaseconnect_newrequirement(title, description, layer, g_project);
+    uint16_t uid = databaseconnect_newrequirement(title, description, layer, g_project);
+    requirements[g_n_total_requirements].uid = uid;
+    strcpy( requirements[g_n_total_requirements].title, title);
+    strcpy( requirements[g_n_total_requirements].description, description);
+    requirements[g_n_total_requirements].layer = layer;
+    requirements[g_n_total_requirements].link[0] = 0;
+    g_n_total_requirements++;
 }

@@ -109,14 +109,26 @@ void databaseconnect_link(uint16_t link, uint16_t uid)
     resultquery = mysql_query(mysql, query);
 }
 
-void databaseconnect_newrequirement( char title[], char description[], uint8_t layer, uint8_t project)
+uint16_t databaseconnect_newrequirement( char title[], char description[], uint8_t layer, uint8_t project)
 {
     char query[512];
     int resultquery;
+    MYSQL_ROW row;
+    MYSQL_RES * mysql_result;
     sprintf(query, "INSERT INTO requirement (title, description, project_ref,"\
         " layer, version) values (\"%s\", \"%s\", %d, %d, 1)", title, description, project, layer);
     gui_printmessage(query);
     resultquery = mysql_query(mysql, query);
+
+    sprintf(query, "SELECT LAST_INSERT_ID()");
+    resultquery = mysql_query(mysql, query);
+    mysql_result = mysql_store_result(mysql);
+    if (mysql_result)
+    {
+        row = mysql_fetch_row(mysql_result);
+        mysql_free_result(mysql_result);
+    }
+    return atoi(row[0]);
 }
 
 void databaseconnect_close(void)

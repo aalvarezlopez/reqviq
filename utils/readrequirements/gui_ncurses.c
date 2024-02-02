@@ -368,10 +368,14 @@ void gui_createnewrequirement()
             keychar = wgetch(popupmessage);
             if( keychar == '\r' || keychar == '\n'){
                 break;
+            }else if( keychar == 127 ){
+                if( l > 0 ){ title[l-1] = 0;}
+            }else{
+                title[ l + 1 ] = 0;
+                title[ l ] = keychar;
             }
-            title[ l + 1 ] = 0;
-            title[ l ] = keychar;
             mvwprintw(popupmessage, 4, 4, title);
+            wclrtoeol(popupmessage);
             wrefresh(popupmessage);
         }
         wclear(popupmessage);
@@ -384,10 +388,14 @@ void gui_createnewrequirement()
             keychar = wgetch(popupmessage);
             if( keychar == '\r' || keychar == '\n'){
                 break;
+            }else if( keychar == 127 ){
+                if( l > 0 ){ description[l-1] = 0;}
+            }else{
+                description[ l + 1 ] = 0;
+                description[ l ] = keychar;
             }
-            description[ l + 1 ] = 0;
-            description[ l ] = keychar;
             mvwprintw(popupmessage, 4, 4, description);
+            wclrtoeol(popupmessage);
             wrefresh(popupmessage);
         }
         requirement_newrequirement( title, description, layer);
@@ -415,10 +423,14 @@ void gui_linkrequirement()
             keychar = wgetch(popupmessage);
             if( keychar == '\r' || keychar == '\n'){
                 break;
+            }else if( keychar == 127 ){
+                if( l > 0 ){ refn[l-1] = 0;}
+            }else{
+                refn[ l + 1 ] = 0;
+                refn[ l ] = keychar;
             }
-            refn[ l + 1 ] = 0;
-            refn[ l ] = keychar;
             mvwprintw(popupmessage, 1, 4, refn);
+            wclrtoeol(popupmessage);
             wrefresh(popupmessage);
         }
         delwin(popupmessage);
