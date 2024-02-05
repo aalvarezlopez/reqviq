@@ -9,6 +9,7 @@
 #define REQ_MAIN_FILE
 #include "stdio.h"
 #include "stdint.h"
+#include "stdbool.h"
 #include "requirements.h"
 #include "databaseconnect.h"
 
@@ -39,6 +40,74 @@ uint16_t requirement_getoffset(uint8_t layer)
 uint16_t requirement_getn(uint8_t layer)
 {
     return g_n_req[layer];
+}
+
+uint16_t requirement_getnpr(uint16_t *nolink)
+{
+    *nolink = 0;
+    for(uint16_t i = 0; i < g_n_total_requirements; i++){
+        if( requirements[i].layer == 1){
+            bool islinked = false;
+            for(uint16_t j = 0; j < g_n_total_requirements; j++){
+                if( requirements[i].uid == requirements[j].link[0] ){
+                    islinked = true;
+                }
+            }
+            if( islinked == false ){
+                *nolink = (*nolink) + 1;
+            }
+        }
+    }
+    return g_n_req[0];
+}
+
+uint16_t requirement_getnsys(uint16_t *nolinkup, uint16_t *nolinkdown)
+{
+    *nolinkdown = 0;
+    *nolinkup = 0;
+    for(uint16_t i = 0; i < g_n_total_requirements; i++){
+        if( requirements[i].layer == 2){
+            bool islinked = false;
+            for(uint16_t j = 0; j < g_n_total_requirements; j++){
+                if( requirements[i].uid == requirements[j].link[0] ){
+                    islinked = true;
+                }
+            }
+            if( islinked == false ){
+                *nolinkdown = *nolinkdown + 1;
+            }
+            if( requirements[i].link[0] == 0 ){
+                *nolinkup = (*nolinkup) + 1;
+            }
+        }
+    }
+    return g_n_req[1];
+}
+
+uint16_t requirement_getnsw(uint16_t *nolinkup)
+{
+    *nolinkup = 0;
+    for(uint16_t i = 0; i < g_n_total_requirements; i++){
+        if( requirements[i].layer == 3){
+            if( requirements[i].link[0] == 0 ){
+                *nolinkup = *nolinkup + 1;
+            }
+        }
+    }
+    return g_n_req[2];
+}
+
+uint16_t requirement_getnhw(uint16_t *nolinkup)
+{
+    *nolinkup = 0;
+    for(uint16_t i = 0; i < g_n_total_requirements; i++){
+        if( requirements[i].layer == 4){
+            if( requirements[i].link[0] == 0 ){
+                *nolinkup = *nolinkup + 1;
+            }
+        }
+    }
+    return g_n_req[3];
 }
 
 uint8_t requirement_getrequirement(char title[][REQ_TITLE_LEN], char description[][REQ_DESC_LEN], uint16_t *uid,

@@ -52,4 +52,14 @@ $(TARGET): $(OBJECTS)
 	$(CC) $(CFLAGS) $(shell pkg-config --cflags mysqlclient)  -g -c -o $@ $<
 
 exportpdf: $(TARGET)
-	./$(TARGET) && xelatex ./report.tex
+	./$(TARGET)
+	cat ./stats.txt | sed -n '1p' | xargs -I$$ sed -i 's/%replaceNPR%/$$/g' ./report.tex
+	cat ./stats.txt | sed -n '2p' | xargs -I$$ sed -i 's/%replaceNPLDR%/$$/g' ./report.tex
+	cat ./stats.txt | sed -n '3p' | xargs -I$$ sed -i 's/%replaceNSR%/$$/g' ./report.tex
+	cat ./stats.txt | sed -n '4p' | xargs -I$$ sed -i 's/%replaceNSRLD%/$$/g' ./report.tex
+	cat ./stats.txt | sed -n '5p' | xargs -I$$ sed -i 's/%replaceNSRLU%/$$/g' ./report.tex
+	cat ./stats.txt | sed -n '6p' | xargs -I$$ sed -i 's/%replaceNSwR%/$$/g' ./report.tex
+	cat ./stats.txt | sed -n '7p' | xargs -I$$ sed -i 's/%replaceNSwRLU%/$$/g' ./report.tex
+	cat ./stats.txt | sed -n '8p' | xargs -I$$ sed -i 's/%replaceNHwR%/$$/g' ./report.tex
+	cat ./stats.txt | sed -n '9p' | xargs -I$$ sed -i 's/%replaceNHwRLU%/$$/g' ./report.tex
+	xelatex ./report.tex
