@@ -50,3 +50,6 @@ $(TARGET): $(OBJECTS)
 
 %.o: %.c
 	$(CC) $(CFLAGS) $(shell pkg-config --cflags mysqlclient)  -g -c -o $@ $<
+
+exportpdf: $(TARGET)
+	./$(TARGET) && xelatex ./report.tex
