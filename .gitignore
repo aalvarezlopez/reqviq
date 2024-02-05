@@ -1,3 +1,10 @@
 .env
 newreq
 readreq
+report
+utils/report/_static/requiement_block.tex
+*.aux
+*.log
+*.pdf
+utils/report/report.tex
+utils/report/stats.txt
