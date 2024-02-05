@@ -1,0 +1,33 @@
+\documentclass{article}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{graphicx}
+\usepackage{tcolorbox}
+\tcbuselibrary{skins}
+\usepackage{lipsum}
+\usepackage[margin=0.5in]{geometry}
+
+\begin{document}
+\tcbset{colframe=blue!50!black,colback=white,colupper=red!50!black,
+fonttitle=\bfseries,nobeforeafter,center title}
+
+\newtcolorbox{projectreqpass}[1]{colframe=Aquamarine,colback=white,colupper=red!50!black,
+fonttitle=\bfseries,nobeforeafter,center title, title={\includegraphics[width=0.3cm]{./_static/pass.png} #1}}
+\newtcolorbox{projectreqfail}[1]{colframe=Aquamarine,colback=white,colupper=red!50!black,
+fonttitle=\bfseries,nobeforeafter,center title, title={\includegraphics[width=0.3cm]{./_static/fail.png} #1}}
+\newtcolorbox{systemreqpass}[1]{colframe=Apricot,colback=white,colupper=red!50!black,
+fonttitle=\bfseries,nobeforeafter,center title, title={\includegraphics[width=0.3cm]{./_static/pass.png} #1}}
+\newtcolorbox{systemreqfail}[1]{colframe=Apricot,colback=white,colupper=red!50!black,
+fonttitle=\bfseries,nobeforeafter,center title, title={\includegraphics[width=0.3cm]{./_static/fail.png} #1}}
+\newtcolorbox{softwarereqpass}[1]{colframe=Melon,colback=white,colupper=red!50!black,
+fonttitle=\bfseries,nobeforeafter,center title, title={\includegraphics[width=0.3cm]{./_static/pass.png} #1}}
+\newtcolorbox{softwarereqfail}[1]{colframe=Melon,colback=white,colupper=red!50!black,
+fonttitle=\bfseries,nobeforeafter,center title, title={\includegraphics[width=0.3cm]{./_static/fail.png} #1}}
+\newtcolorbox{hardwarereqpass}[1]{colframe=Plum,colback=white,colupper=red!50!black,
+fonttitle=\bfseries,nobeforeafter,center title, title={\includegraphics[width=0.3cm]{./_static/pass.png} #1}}
+\newtcolorbox{hardwarereqfail}[1]{colframe=Plum,colback=white,colupper=red!50!black,
+fonttitle=\bfseries,nobeforeafter,center title, title={\includegraphics[width=0.3cm]{./_static/fail.png} #1}}
+
+
+%fill with requirements
+
+\end{document}
